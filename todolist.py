@@ -1,6 +1,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 import json
+import datetime
 
 app = QApplication([])
 my_win = QWidget()
@@ -20,7 +21,7 @@ def check_user():
         to_do_text.setText(text)
         Intro_Group.hide()
         to_do_list_Group.show()
-        display_task()
+        display_task() #Now
     elif (name_fill.text() in obj) and (obj[name_fill.text()]['Password'] != pw_fill.text()):
         text_label.setText('Wrong Password!')
         pw_fill.clear()
@@ -40,26 +41,32 @@ def display_task():
     if obj[name_fill.text()]['note'] != []:
         for note in obj[name_fill.text()]['note']:
             to_do_list.addItem(QListWidgetItem(note))
+    to_do_list.itemClicked.connect(DisplayTime)
     with open("notes.json", "w") as file:
         json.dump(obj, file, ensure_ascii=False)
 
+def DisplayTime():
+    to_do_date.setText(obj[name_fill.text()]['note'][to_do_list.currentItem().text()])
+
 def add_new():
     if new_task.text() != '':
-        obj[name_fill.text()]['note'].append(new_task.text())
+        now = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        obj[name_fill.text()]['note'][new_task.text()] = str(now)
         new_task.clear()
         display_task()
     else:
         to_do_text.setText('Please insert new task!')
 
 def delete_old():
-    obj[name_fill.text()]['note'].remove(to_do_list.currentItem().text())
+    del obj[name_fill.text()]['note'][to_do_list.currentItem().text()]
+    to_do_date.setText('')
     display_task()
 
 def new_user_data():
     if pw_fill_con.text() == '' or pw_fill_con.text() != pw_fill.text():
         text_label.setText('Please insert the same password as confirmation password!')
     else:
-        obj[name_fill.text()] = {'Password':pw_fill_con.text(),'note':[]}
+        obj[name_fill.text()] = {'Password':pw_fill_con.text(),'note':{}}
         text = name_fill.text() + ', Welcome Back!'
         to_do_text.setText(text)
         Intro_Group.hide()
@@ -110,6 +117,7 @@ Intro_Group.setLayout(V_line[0])
 
 #To Do list Page
 to_do_text = QLabel('')
+to_do_date = QLabel('')
 to_do_list = QListWidget()
 to_do_list_Group = QGroupBox()
 new_task = QLineEdit('')
@@ -120,12 +128,15 @@ delete_task_submit = QPushButton('Delete Task')
 #To Do list Position
 V_line[1] = QVBoxLayout()
 H_line[6] = QHBoxLayout()
-V_line[1].addWidget(to_do_text)
-V_line[1].addWidget(to_do_list)
-H_line[6].addWidget(new_task)
-H_line[6].addWidget(new_task_submit)
-H_line[6].addWidget(delete_task_submit)
+H_line[7] = QHBoxLayout()
+H_line[6].addWidget(to_do_text)
+H_line[6].addWidget(to_do_date, alignment=Qt.AlignRight)
 V_line[1].addLayout(H_line[6])
+V_line[1].addWidget(to_do_list)
+H_line[7].addWidget(new_task)
+H_line[7].addWidget(new_task_submit)
+H_line[7].addWidget(delete_task_submit)
+V_line[1].addLayout(H_line[7])
 to_do_list_Group.setLayout(V_line[1])
 
 #Button link
